@@ -1,26 +1,37 @@
-const video =
-document.getElementById("camera");
+import * as THREE from "../../libs/three.module.js";
 
-
-const canvas =
-document.getElementById("canvas");
-
-
-const ctx =
-canvas.getContext("2d");
+import { ARButton } 
+from "../../libs/ARButton.js";
 
 
 
-let measuring=false;
-
-
-let point1=null;
-
-let point2=null;
+let camera;
+let scene;
+let renderer;
 
 
 
-let realHeight=0;
+let controller;
+
+
+
+let reticle;
+
+
+
+let hitTestSource = null;
+
+let hitTestSourceRequested = false;
+
+
+
+let point1 = null;
+
+let point2 = null;
+
+
+
+let line;
 
 
 
@@ -31,258 +42,298 @@ localStorage.getItem("flute")
 
 
 
-// =====================
-// CAMERA
-// =====================
 
 
-async function startCamera(){
+init();
+
+animate();
 
 
-try{
 
 
-const stream =
-await navigator.mediaDevices.getUserMedia({
 
-video:{
+function init(){
 
-facingMode:{
-ideal:"environment"
-}
 
-}
 
+scene = new THREE.Scene();
+
+
+
+camera =
+new THREE.PerspectiveCamera(
+70,
+window.innerWidth /
+window.innerHeight,
+0.01,
+20
+);
+
+
+
+
+
+renderer =
+new THREE.WebGLRenderer({
+
+antialias:true,
+
+alpha:true
 
 });
 
 
-video.srcObject=stream;
+
+renderer.setPixelRatio(
+window.devicePixelRatio
+);
+
+
+renderer.setSize(
+window.innerWidth,
+window.innerHeight
+);
+
+
+renderer.xr.enabled = true;
 
 
 
-document.getElementById("status")
-.innerHTML=
-"Kamera aktif";
+document.body.appendChild(
+renderer.domElement
+);
+
+
+
+
+
+document.body.appendChild(
+
+ARButton.createButton(
+renderer,
+{
+requiredFeatures:[
+"hit-test"
+]
+}
+
+)
+
+);
+
+
+
+
+
+// reticle
+
+
+const geometry =
+new THREE.RingGeometry(
+0.05,
+0.08,
+32
+)
+.rotateX(
+-Math.PI/2
+);
+
+
+
+const material =
+new THREE.MeshBasicMaterial({
+
+color:0x00ffff
+
+});
+
+
+
+reticle =
+new THREE.Mesh(
+geometry,
+material
+);
+
+
+
+reticle.matrixAutoUpdate=false;
+
+reticle.visible=false;
+
+
+
+scene.add(reticle);
+
+
+
+
+
+controller =
+renderer.xr.getController(0);
+
+
+controller.addEventListener(
+"select",
+onSelect
+);
+
+
+scene.add(controller);
+
 
 
 }
 
 
-catch(error){
-
-
-document.getElementById("status")
-.innerHTML=
-"Kamera gagal";
-
-
-console.log(error);
-
-
-}
-
-
-}
 
 
 
-startCamera();
+function onSelect(){
 
 
 
-
-
-// =====================
-// CANVAS SIZE
-// =====================
-
-
-function resizeCanvas(){
-
-
-canvas.width =
-window.innerWidth;
-
-
-canvas.height =
-window.innerHeight;
-
-
-}
-
-
-resizeCanvas();
-
-
-window.onresize=resizeCanvas;
-
-
-
-
-
-// =====================
-// MULAI UKUR
-// =====================
-
-
-document
-.getElementById("start")
-.onclick=function(){
-
-
-measuring=true;
-
-
-point1=null;
-
-point2=null;
-
-
-
-document.getElementById("status")
-.innerHTML=
-"Klik titik pertama";
-
-
-}
-
-
-
-
-
-
-// =====================
-// CLICK SCREEN
-// =====================
-
-
-canvas.onclick=function(e){
-
-
-if(!measuring)
+if(!reticle.visible)
 return;
 
 
 
-let x=e.clientX;
 
-let y=e.clientY;
-
-
-
-if(point1==null){
+let position =
+new THREE.Vector3();
 
 
-point1={
-x:x,
-y:y
-};
+position.setFromMatrixPosition(
+reticle.matrix
+);
+
+
+
+
+
+if(point1===null){
+
+
+point1 =
+position.clone();
+
 
 
 document.getElementById("status")
-.innerHTML=
-"Klik titik kedua";
+.innerHTML =
+"Titik pertama tersimpan";
+
 
 
 }
 
-
 else{
 
 
-point2={
+point2 =
+position.clone();
 
-x:x,
 
-y:y
 
-};
+drawLine();
 
 
 calculate();
 
 
-
-}
-
-
 }
 
 
 
+}
 
 
-// =====================
-// HITUNG
-// =====================
+
+
+
+
+function drawLine(){
+
+
+const geometry =
+new THREE.BufferGeometry()
+.setFromPoints([
+
+point1,
+
+point2
+
+]);
+
+
+
+const material =
+new THREE.LineBasicMaterial({
+
+color:0x008cff
+
+});
+
+
+
+line =
+new THREE.Line(
+geometry,
+material
+);
+
+
+scene.add(line);
+
+
+}
+
+
+
+
 
 
 function calculate(){
 
 
-let pixelDistance =
-Math.sqrt(
 
-Math.pow(
-point2.x-point1.x,
-2
-)
-
-+
-
-Math.pow(
-point2.y-point1.y,
-2
-)
-
+const meter =
+point1.distanceTo(
+point2
 );
 
 
 
-// sementara kalibrasi
-// nanti diganti AR scale
-
-
-realHeight =
-pixelDistance;
+const mm =
+meter*1000;
 
 
 
-let sheet =
-
+const sheet =
 Math.floor(
-realHeight/flute
+mm/flute
 );
 
 
 
-document
-.getElementById("distance")
-.innerHTML=
 
-realHeight.toFixed(0)
-+" mm";
+document.getElementById("distance")
+.innerHTML =
+mm.toFixed(0)+" mm";
 
 
 
-document
-.getElementById("sheet")
-.innerHTML=
-
-sheet+
-" Sheet";
+document.getElementById("sheet")
+.innerHTML =
+sheet+" Sheet";
 
 
 
-document
-.getElementById("status")
-.innerHTML=
+document.getElementById("status")
+.innerHTML =
 "Selesai";
 
 
-measuring=false;
-
 
 }
 
@@ -291,96 +342,141 @@ measuring=false;
 
 
 
-// =====================
-// GAMBAR GARIS
-// =====================
+function animate(){
 
 
-function draw(){
-
-
-ctx.clearRect(
-0,
-0,
-canvas.width,
-canvas.height
+renderer.setAnimationLoop(
+render
 );
-
-
-
-if(point1){
-
-
-ctx.beginPath();
-
-
-ctx.arc(
-point1.x,
-point1.y,
-8,
-0,
-Math.PI*2
-);
-
-
-ctx.fillStyle=
-"red";
-
-
-ctx.fill();
 
 
 }
 
 
 
-if(point1 && point2){
 
 
-ctx.beginPath();
+function render(
+timestamp,
+frame
+){
 
 
-ctx.moveTo(
-point1.x,
-point1.y
+
+if(frame){
+
+
+const referenceSpace =
+renderer.xr.getReferenceSpace();
+
+
+
+const session =
+renderer.xr.getSession();
+
+
+
+
+if(!hitTestSourceRequested){
+
+
+
+session.requestReferenceSpace(
+"viewer"
+)
+
+.then(
+space=>{
+
+
+session.requestHitTestSource({
+
+space:space
+
+})
+
+.then(source=>{
+
+hitTestSource=source;
+
+});
+
+
+
+});
+
+
+
+session.addEventListener(
+"end",
+()=>{
+
+hitTestSourceRequested=false;
+
+hitTestSource=null;
+
+
+}
 );
 
 
-ctx.lineTo(
-point2.x,
-point2.y
+
+hitTestSourceRequested=true;
+
+
+}
+
+
+
+
+
+if(hitTestSource){
+
+
+
+const hitTestResults =
+frame.getHitTestResults(
+hitTestSource
 );
 
 
 
-ctx.strokeStyle=
-"#00aaff";
+if(hitTestResults.length){
 
 
-ctx.lineWidth=5;
-
-
-ctx.stroke();
+const hit =
+hitTestResults[0];
 
 
 
-ctx.beginPath();
-
-
-ctx.arc(
-point2.x,
-point2.y,
-8,
-0,
-Math.PI*2
+const pose =
+hit.getPose(
+referenceSpace
 );
 
 
-ctx.fillStyle=
-"red";
+
+reticle.visible=true;
 
 
-ctx.fill();
+reticle.matrix.fromArray(
+pose.transform.matrix
+);
+
+
+
+}
+
+else{
+
+
+reticle.visible=false;
+
+
+}
+
+
+}
 
 
 
@@ -388,59 +484,11 @@ ctx.fill();
 
 
 
-requestAnimationFrame(draw);
 
-
-}
-
-
-
-draw();
-
-
-
-
-
-// =====================
-// RESET
-// =====================
-
-
-document
-.getElementById("reset")
-.onclick=function(){
-
-
-point1=null;
-
-point2=null;
-
-
-ctx.clearRect(
-0,
-0,
-canvas.width,
-canvas.height
+renderer.render(
+scene,
+camera
 );
-
-
-
-document
-.getElementById("distance")
-.innerHTML=
-"0 mm";
-
-
-document
-.getElementById("sheet")
-.innerHTML=
-"0 Sheet";
-
-
-document
-.getElementById("status")
-.innerHTML=
-"Klik Mulai Pengukuran";
 
 
 }
