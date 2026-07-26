@@ -1,33 +1,32 @@
 import * as THREE from "../../libs/three.module.js";
 
-import { ARButton } 
+import {ARButton}
 from "../../libs/ARButton.js";
 
 
 
 let camera;
-let scene;
-let renderer;
 
+let scene;
+
+let renderer;
 
 
 let controller;
 
 
-
 let reticle;
 
 
+let hitTestSource=null;
 
-let hitTestSource = null;
-
-let hitTestSourceRequested = false;
-
+let hitTestRequested=false;
 
 
-let point1 = null;
 
-let point2 = null;
+let point1=null;
+
+let point2=null;
 
 
 
@@ -38,9 +37,7 @@ let line;
 const flute =
 parseFloat(
 localStorage.getItem("flute")
-) || 3;
-
-
+)||3;
 
 
 
@@ -50,26 +47,21 @@ animate();
 
 
 
-
-
 function init(){
 
 
-
-scene = new THREE.Scene();
+scene =
+new THREE.Scene();
 
 
 
 camera =
 new THREE.PerspectiveCamera(
 70,
-window.innerWidth /
-window.innerHeight,
+window.innerWidth/window.innerHeight,
 0.01,
 20
 );
-
-
 
 
 
@@ -83,19 +75,17 @@ alpha:true
 });
 
 
-
-renderer.setPixelRatio(
-window.devicePixelRatio
-);
-
-
 renderer.setSize(
+
 window.innerWidth,
+
 window.innerHeight
+
 );
 
 
-renderer.xr.enabled = true;
+
+renderer.xr.enabled=true;
 
 
 
@@ -106,15 +96,18 @@ renderer.domElement
 
 
 
-
 document.body.appendChild(
 
 ARButton.createButton(
+
 renderer,
+
 {
+
 requiredFeatures:[
 "hit-test"
 ]
+
 }
 
 )
@@ -125,42 +118,35 @@ requiredFeatures:[
 
 
 
-// reticle
-
-
-const geometry =
-new THREE.RingGeometry(
-0.05,
-0.08,
-32
-)
-.rotateX(
--Math.PI/2
-);
-
-
-
-const material =
-new THREE.MeshBasicMaterial({
-
-color:0x00ffff
-
-});
-
-
+// titik AR
 
 reticle =
 new THREE.Mesh(
-geometry,
-material
+
+new THREE.RingGeometry(
+0.08,
+0.1,
+32
+),
+
+new THREE.MeshBasicMaterial({
+
+color:0x00ff00
+
+})
+
 );
 
+
+
+reticle.rotation.x=
+-Math.PI/2;
 
 
 reticle.matrixAutoUpdate=false;
 
-reticle.visible=false;
 
+reticle.visible=false;
 
 
 scene.add(reticle);
@@ -174,8 +160,11 @@ renderer.xr.getController(0);
 
 
 controller.addEventListener(
+
 "select",
-onSelect
+
+selectPoint
+
 );
 
 
@@ -189,13 +178,11 @@ scene.add(controller);
 
 
 
-function onSelect(){
-
+function selectPoint(){
 
 
 if(!reticle.visible)
 return;
-
 
 
 
@@ -209,20 +196,15 @@ reticle.matrix
 
 
 
+if(point1==null){
 
 
-if(point1===null){
-
-
-point1 =
-position.clone();
-
+point1=position;
 
 
 document.getElementById("status")
-.innerHTML =
-"Titik pertama tersimpan";
-
+.innerHTML=
+"Titik kedua";
 
 
 }
@@ -230,9 +212,7 @@ document.getElementById("status")
 else{
 
 
-point2 =
-position.clone();
-
+point2=position;
 
 
 drawLine();
@@ -244,8 +224,8 @@ calculate();
 }
 
 
-
 }
+
 
 
 
@@ -270,7 +250,9 @@ point2
 const material =
 new THREE.LineBasicMaterial({
 
-color:0x008cff
+color:0x0088ff,
+
+linewidth:5
 
 });
 
@@ -283,6 +265,7 @@ material
 );
 
 
+
 scene.add(line);
 
 
@@ -293,50 +276,43 @@ scene.add(line);
 
 
 
+
 function calculate(){
 
 
-
-const meter =
-point1.distanceTo(
-point2
-);
+let meter =
+point1.distanceTo(point2);
 
 
 
-const mm =
+let mm =
 meter*1000;
 
 
 
-const sheet =
+let sheet =
 Math.floor(
 mm/flute
 );
 
 
 
-
 document.getElementById("distance")
-.innerHTML =
-mm.toFixed(0)+" mm";
+.innerHTML=
+
+mm.toFixed(0)
++" mm";
 
 
 
 document.getElementById("sheet")
-.innerHTML =
-sheet+" Sheet";
+.innerHTML=
 
-
-
-document.getElementById("status")
-.innerHTML =
-"Selesai";
-
+sheet+
+" Sheet";
 
 
 }
-
 
 
 
@@ -346,47 +322,32 @@ function animate(){
 
 
 renderer.setAnimationLoop(
-render
-);
 
-
-}
-
-
-
-
-
-function render(
-timestamp,
-frame
-){
-
+(timestamp,frame)=>{
 
 
 if(frame){
 
 
-const referenceSpace =
+let referenceSpace =
 renderer.xr.getReferenceSpace();
 
 
-
-const session =
+let session =
 renderer.xr.getSession();
 
 
 
-
-if(!hitTestSourceRequested){
-
+if(!hitTestRequested){
 
 
 session.requestReferenceSpace(
+
 "viewer"
+
 )
 
-.then(
-space=>{
+.then(space=>{
 
 
 session.requestHitTestSource({
@@ -397,31 +358,17 @@ space:space
 
 .then(source=>{
 
+
 hitTestSource=source;
 
-});
-
-
 
 });
 
 
-
-session.addEventListener(
-"end",
-()=>{
-
-hitTestSourceRequested=false;
-
-hitTestSource=null;
+});
 
 
-}
-);
-
-
-
-hitTestSourceRequested=true;
+hitTestRequested=true;
 
 
 }
@@ -433,10 +380,11 @@ hitTestSourceRequested=true;
 if(hitTestSource){
 
 
-
-const hitTestResults =
+let hitTestResults =
 frame.getHitTestResults(
+
 hitTestSource
+
 );
 
 
@@ -444,50 +392,46 @@ hitTestSource
 if(hitTestResults.length){
 
 
-const hit =
+let hit =
 hitTestResults[0];
 
 
-
-const pose =
+let pose =
 hit.getPose(
-referenceSpace
-);
 
+referenceSpace
+
+);
 
 
 reticle.visible=true;
 
 
 reticle.matrix.fromArray(
+
 pose.transform.matrix
+
 );
 
 
-
-}
-
-else{
-
-
-reticle.visible=false;
-
-
 }
 
 
 }
 
 
-
 }
-
 
 
 
 renderer.render(
 scene,
 camera
+);
+
+
+}
+
 );
 
 
