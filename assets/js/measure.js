@@ -84,10 +84,15 @@ renderer,
 
 requiredFeatures:[
 "hit-test"
-]
+],
+
+optionalFeatures:[
+"dom-overlay"
+],
+
+cameraAccess:"rear"
 
 }
-
 )
 
 );
@@ -120,6 +125,76 @@ camera
 
 
 });
+
+
+}
+
+async function startCamera(){
+
+
+try{
+
+
+const stream =
+await navigator.mediaDevices.getUserMedia({
+
+video:{
+
+facingMode:{
+ideal:"environment"
+}
+
+}
+
+});
+
+
+
+const video =
+document.createElement("video");
+
+
+video.srcObject=stream;
+
+
+video.autoplay=true;
+
+
+video.playsInline=true;
+
+
+video.style.position="absolute";
+
+video.style.width="100%";
+
+video.style.height="100%";
+
+video.style.objectFit="cover";
+
+
+document.body.appendChild(video);
+
+
+
+document.getElementById("status")
+.innerHTML=
+"Kamera belakang aktif";
+
+
+}
+
+catch(error){
+
+
+console.log(error);
+
+
+document.getElementById("status")
+.innerHTML=
+"Kamera gagal dibuka";
+
+
+}
 
 
 }
