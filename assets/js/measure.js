@@ -104,7 +104,13 @@ renderer,
 
 {
 
-requiredFeatures:[
+ARButton.createButton(
+
+renderer,
+
+{
+
+optionalFeatures:[
 "hit-test"
 ]
 
