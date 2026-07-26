@@ -1,16 +1,22 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 
 <head>
 
 <meta charset="UTF-8">
 
-<meta name="viewport" 
-content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width,initial-scale=1.0">
 
-<title>Sheet Counter</title>
 
-<link rel="stylesheet" href="assets/css/measure.css">
+<title>
+AR Sheet Counter
+</title>
+
+
+<link rel="stylesheet"
+href="assets/css/measure.css">
+
 
 </head>
 
@@ -18,37 +24,30 @@ content="width=device-width, initial-scale=1.0">
 <body>
 
 
-<video id="camera"
-autoplay
-playsinline>
-</video>
+<div id="info">
 
 
-<canvas id="canvas"></canvas>
+<div id="status">
+Tekan START AR
+</div>
 
 
+<div id="result">
 
-<div class="panel">
-
-
-<p id="status">
-Klik Mulai Pengukuran
-</p>
-
-
-<h1 id="distance">
+<span id="distance">
 0 mm
-</h1>
+</span>
 
 
-<h1 id="sheet">
+<br>
+
+
+<span id="sheet">
 0 Sheet
-</h1>
+</span>
 
 
-<button id="start">
-Mulai Pengukuran
-</button>
+</div>
 
 
 <button id="reset">
@@ -60,9 +59,12 @@ Reset
 
 
 
-<script src="assets/js/measure.js"></script>
+<script type="module"
+src="assets/js/measure.js">
+</script>
 
 
 </body>
+
 
 </html>
