@@ -73,6 +73,45 @@ box-shadow:0 3px 12px rgba(0,0,0,.2);
 
 }
 
+
+.panel h2{
+
+font-size:14px;
+
+margin:3px 0;
+
+}
+
+
+#status{
+
+font-size:11px;
+
+margin:3px;
+
+}
+
+
+h1{
+
+font-size:22px;
+
+margin:2px;
+
+}
+
+
+button{
+
+padding:8px;
+
+font-size:12px;
+
+border-radius:10px;
+
+}
+
+
 h1{
 
 color:#007AFF;
